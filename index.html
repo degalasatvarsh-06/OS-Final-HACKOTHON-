@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Disk Scheduler | Interactive Operating System Simulator</title>
+  <meta name="description" content="A state-of-the-art interactive disk scheduling algorithm simulator. Explore FCFS, SSTF, SCAN, C-SCAN, LOOK, C-LOOK, and Smart AI-Adaptive scheduling with 2D platter animations, live seek graphs, and head-to-head algorithm races.">
+  <meta name="keywords" content="disk scheduling, operating system, FCFS, SSTF, SCAN, C-SCAN, LOOK, C-LOOK, smart disk scheduler, seek time simulator">
+  
+  <!-- Modern Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome for modern icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Custom Styling -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="background-mesh">
+    <div class="glow-orb orb-1"></div>
+    <div class="glow-orb orb-2"></div>
+    <div class="glow-orb orb-3"></div>
+  </div>
+
+  <!-- Header & Navigation -->
+  <header class="app-header">
+    <div class="brand">
+      <div class="logo-icon">
+        <i class="fa-solid fa-compact-disc spin-slow"></i>
+        <div class="pulse-ring"></div>
+      </div>
+      <div class="brand-text">
+        <h1>SmartDisk<span class="highlight">OS</span></h1>
+        <p class="tagline">Interactive Hard Disk Head Scheduling & AI Benchmark Simulator</p>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button id="soundToggleBtn" class="glass-btn btn-icon" title="Toggle Mechanical Audio FX">
+        <i class="fa-solid fa-volume-xmark"></i>
+        <span class="btn-text">Audio: Off</span>
+      </button>
+      <button id="openTheoryBtn" class="glass-btn" title="Learn Algorithm Theory">
+        <i class="fa-solid fa-graduation-cap"></i>
+        <span>Algorithm Theory</span>
+      </button>
+      <button id="openRaceBtn" class="glass-btn btn-accent" title="Multi-Algorithm Live Race Mode">
+        <i class="fa-solid fa-flag-checkered"></i>
+        <span>Race Mode</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Grid Dashboard -->
+  <main class="dashboard-grid">
+    <!-- Left Column: Controls & Configuration -->
+    <aside class="control-panel glass-card">
+      <div class="panel-header">
+        <i class="fa-solid fa-sliders"></i>
+        <h2>Simulation Settings</h2>
+      </div>
+
+      <!-- Presets Selector -->
+      <div class="form-group">
+        <label for="presetSelect">Workload Presets</label>
+        <div class="select-wrapper">
+          <select id="presetSelect">
+            <option value="textbook">Standard Textbook (Silberschatz/Galvin)</option>
+            <option value="high-variance">Extreme Cylinder Variance</option>
+            <option value="clustered">Clustered Locality of Reference</option>
+            <option value="starvation">High Starvation Vulnerability</option>
+            <option value="custom" selected>Custom Configuration</option>
+          </select>
+          <i class="fa-solid fa-chevron-down select-arrow"></i>
+        </div>
+      </div>
+
+      <!-- Algorithm Picker -->
+      <div class="form-group">
+        <label for="algorithmSelect">Scheduling Algorithm</label>
+        <div class="select-wrapper">
+          <select id="algorithmSelect">
+            <option value="SMART" selected>🌟 Smart-Adaptive (SSTF + Starvation Guard)</option>
+            <option value="FCFS">FCFS (First-Come First-Served)</option>
+            <option value="SSTF">SSTF (Shortest Seek Time First)</option>
+            <option value="SCAN">SCAN (Elevator Algorithm)</option>
+            <option value="CSCAN">C-SCAN (Circular SCAN)</option>
+            <option value="LOOK">LOOK</option>
+            <option value="CLOOK">C-LOOK (Circular LOOK)</option>
+          </select>
+          <i class="fa-solid fa-chevron-down select-arrow"></i>
+        </div>
+        <div id="algoBadge" class="algo-badge">
+          <span class="badge-dot"></span>
+          <span id="algoShortDesc">Dynamic heuristic balancing seek distance & request age</span>
+        </div>
+      </div>
+
+      <!-- Queue Input -->
+      <div class="form-group">
+        <div class="label-row">
+          <label for="requestQueueInput">I/O Request Queue (Cylinders)</label>
+          <button id="randomizeBtn" class="text-btn" title="Generate Random Cylinders">
+            <i class="fa-solid fa-shuffle"></i> Randomize
+          </button>
+        </div>
+        <input type="text" id="requestQueueInput" value="98, 183, 37, 122, 14, 124, 65, 67" placeholder="e.g. 98, 183, 37, 122">
+        <span class="input-hint">Comma-separated cylinder indices between 0 and Max Cylinder</span>
+      </div>
+
+      <!-- Disk Geometry Parameters -->
+      <div class="params-row">
+        <div class="form-group half-width">
+          <label for="initialHeadInput">Initial Head Pos</label>
+          <input type="number" id="initialHeadInput" value="53" min="0" max="199">
+        </div>
+        <div class="form-group half-width">
+          <label for="maxCylinderInput">Total Cylinders</label>
+          <input type="number" id="maxCylinderInput" value="200" min="50" max="1000">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Initial Arm Direction</label>
+        <div class="segmented-control" id="directionToggle">
+          <button type="button" class="segment-btn active" data-dir="right">
+            <i class="fa-solid fa-arrow-right-long"></i> High (Increasing)
+          </button>
+          <button type="button" class="segment-btn" data-dir="left">
+            <i class="fa-solid fa-arrow-left-long"></i> Low (Decreasing)
+          </button>
+        </div>
+      </div>
+
+      <!-- Real-time Request Injector -->
+      <div class="form-group dynamic-inject-box">
+        <label for="liveCylinderInput">Inject Live Request</label>
+        <div class="inject-input-group">
+          <input type="number" id="liveCylinderInput" placeholder="Cylinder #" min="0" max="199">
+          <button id="injectBtn" class="glass-btn btn-sm">
+            <i class="fa-solid fa-plus"></i> Add
+          </button>
+        </div>
+      </div>
+
+      <!-- Playback Controls -->
+      <div class="playback-controls">
+        <div class="playback-btn-row">
+          <button id="stepPrevBtn" class="control-btn" title="Step Back">
+            <i class="fa-solid fa-backward-step"></i>
+          </button>
+          <button id="playPauseBtn" class="control-btn play-btn" title="Start / Pause Simulation">
+            <i class="fa-solid fa-play"></i>
+          </button>
+          <button id="stepNextBtn" class="control-btn" title="Step Forward">
+            <i class="fa-solid fa-forward-step"></i>
+          </button>
+          <button id="resetBtn" class="control-btn reset-btn" title="Reset Simulation">
+            <i class="fa-solid fa-rotate-left"></i>
+          </button>
+        </div>
+
+        <!-- Speed Slider -->
+        <div class="speed-slider-group">
+          <div class="speed-labels">
+            <span>Simulation Speed</span>
+            <span id="speedValText">1.0x</span>
+          </div>
+          <input type="range" id="speedSlider" min="0.25" max="3" step="0.25" value="1">
+        </div>
+      </div>
+
+      <!-- Live Execution Log Snippet -->
+      <div class="execution-stream">
+        <div class="stream-header">
+          <span>Head Trajectory Log</span>
+          <span id="stepCounter" class="badge">Step 0 / 0</span>
+        </div>
+        <div id="streamList" class="stream-list">
+          <!-- Filled by JS -->
+        </div>
+      </div>
+    </aside>
+
+    <!-- Center/Right Column: Visualizers, Charts & Stats -->
+    <section class="visualizer-column">
+      <!-- Top Metrics Ribbon -->
+      <div class="metrics-ribbon">
+        <div class="metric-card">
+          <div class="metric-icon cyan-icon">
+            <i class="fa-solid fa-road"></i>
+          </div>
+          <div class="metric-content">
+            <span class="metric-label">Total Head Movement</span>
+            <span class="metric-value" id="metricTotalSeek">0</span>
+            <span class="metric-unit">cylinders traversed</span>
+          </div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-icon purple-icon">
+            <i class="fa-solid fa-stopwatch"></i>
+          </div>
+          <div class="metric-content">
+            <span class="metric-label">Average Seek Distance</span>
+            <span class="metric-value" id="metricAvgSeek">0.0</span>
+            <span class="metric-unit">cylinders / request</span>
+          </div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-icon green-icon">
+            <i class="fa-solid fa-gauge-high"></i>
+          </div>
+          <div class="metric-content">
+            <span class="metric-label">Efficiency Score</span>
+            <span class="metric-value" id="metricEfficiency">100%</span>
+            <span class="metric-unit">vs FCFS baseline</span>
+          </div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-icon orange-icon">
+            <i class="fa-solid fa-shield-halved"></i>
+          </div>
+          <div class="metric-content">
+            <span class="metric-label">Max Starvation Wait</span>
+            <span class="metric-value" id="metricMaxWait">0</span>
+            <span class="metric-unit">skipped steps max</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Visualizer Views Switcher -->
+      <div class="view-tabs-bar">
+        <div class="view-tabs">
+          <button class="tab-btn active" data-tab="dual">
+            <i class="fa-solid fa-layer-group"></i> Dual View (Platter + Chart)
+          </button>
+          <button class="tab-btn" data-tab="platter">
+            <i class="fa-solid fa-compact-disc"></i> 3D Platter & Arm View
+          </button>
+          <button class="tab-btn" data-tab="graph">
+            <i class="fa-solid fa-chart-line"></i> Seek Trajectory Graph
+          </button>
+          <button class="tab-btn" data-tab="benchmark">
+            <i class="fa-solid fa-table-list"></i> Algorithm Comparison Matrix
+          </button>
+        </div>
+
+        <div class="quick-export">
+          <button id="exportCsvBtn" class="glass-btn btn-sm" title="Export Results as CSV">
+            <i class="fa-solid fa-file-csv"></i> Export CSV
+          </button>
+        </div>
+      </div>
+
+      <!-- Visualizers Canvas Container -->
+      <div class="visualizer-content" id="visualizerContent">
+        <!-- Dual View Container -->
+        <div class="tab-pane active" id="paneDual">
+          <div class="dual-canvas-grid">
+            <!-- 2D Realistic Rotary Platter -->
+            <div class="canvas-card platter-box">
+              <div class="canvas-title-row">
+                <h3><i class="fa-solid fa-compact-disc"></i> Platter & Actuator Arm Simulator</h3>
+                <div class="head-current-chip">
+                  Head Position: <strong id="currentHeadText">53</strong>
+                </div>
+              </div>
+              <div class="canvas-wrapper">
+                <canvas id="platterCanvas" width="600" height="420"></canvas>
+                <div class="platter-overlay-info">
+                  <span id="diskRpmBadge"><i class="fa-solid fa-arrows-rotate spin"></i> 7200 RPM</span>
+                  <span id="armAngleBadge">Arm Angle: 0°</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Seek Trajectory Graph -->
+            <div class="canvas-card graph-box">
+              <div class="canvas-title-row">
+                <h3><i class="fa-solid fa-chart-line"></i> Cylinder Trajectory Over Time</h3>
+                <div class="graph-legend">
+                  <span class="legend-item"><span class="legend-color completed-color"></span> Visited</span>
+                  <span class="legend-item"><span class="legend-color pending-color"></span> Pending</span>
+                  <span class="legend-item"><span class="legend-color active-head-color"></span> Current Head</span>
+                </div>
+              </div>
+              <div class="canvas-wrapper">
+                <canvas id="graphCanvas" width="600" height="420"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Linear Track Visualizer Bar (Always visible below graph) -->
+        <div class="linear-track-card glass-card">
+          <div class="linear-track-header">
+            <h4><i class="fa-solid fa-ruler-horizontal"></i> Linear Track Cylinder Rail (0 → <span id="maxTrackLabel">199</span>)</h4>
+            <div class="linear-stats">
+              <span>Remaining In Queue: <strong id="queueCountRemaining">8</strong></span>
+            </div>
+          </div>
+          <div class="track-bar-container">
+            <div class="track-rail" id="trackRail">
+              <!-- Dynamically populated cylinder tick marks and target pings -->
+              <div class="track-head-indicator" id="trackHeadIndicator">
+                <div class="head-pointer"></div>
+                <div class="head-glow"></div>
+                <span class="head-label" id="trackHeadLabel">53</span>
+              </div>
+            </div>
+            <div class="track-ticks-labels">
+              <span>0</span>
+              <span>25%</span>
+              <span>50%</span>
+              <span>75%</span>
+              <span id="maxTrackEndLabel">199</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Comparison Table Tab Content -->
+        <div class="tab-pane" id="paneBenchmark" style="display: none;">
+          <div class="benchmark-card glass-card">
+            <div class="benchmark-header">
+              <div>
+                <h3><i class="fa-solid fa-chart-column"></i> Real-time All-Algorithm Comparison Matrix</h3>
+                <p>Computed for current queue: <code id="benchmarkQueueStr">98, 183, 37, 122, 14, 124, 65, 67</code> (Head: <strong id="benchmarkHeadStr">53</strong>)</p>
+              </div>
+              <button id="recomputeBenchmarkBtn" class="glass-btn btn-sm">
+                <i class="fa-solid fa-rotate"></i> Re-Calculate All
+              </button>
+            </div>
+
+            <!-- Comparison Bar Chart -->
+            <div class="benchmark-chart-container">
+              <canvas id="benchmarkChartCanvas" width="900" height="260"></canvas>
+            </div>
+
+            <!-- Comparison Table -->
+            <div class="table-responsive">
+              <table class="benchmark-table" id="benchmarkTable">
+                <thead>
+                  <tr>
+                    <th>Rank</th>
+                    <th>Algorithm</th>
+                    <th>Total Head Movement</th>
+                    <th>Avg Seek Distance</th>
+                    <th>Direction Changes</th>
+                    <th>Starvation Risk</th>
+                    <th>Traversed Order</th>
+                  </tr>
+                </thead>
+                <tbody id="benchmarkTableBody">
+                  <!-- Populated via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Interactive Algorithm Theory Modal -->
+  <div class="modal-backdrop" id="theoryModal" style="display: none;">
+    <div class="modal-dialog glass-card">
+      <div class="modal-header">
+        <h2><i class="fa-solid fa-book-open-reader"></i> Operating System Disk Scheduling Fundamentals</h2>
+        <button class="close-modal-btn" id="closeTheoryBtn"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="theory-nav">
+          <button class="theory-tab-btn active" data-theory="smart">Smart-Adaptive (AI/Heuristic)</button>
+          <button class="theory-tab-btn" data-theory="fcfs">FCFS</button>
+          <button class="theory-tab-btn" data-theory="sstf">SSTF</button>
+          <button class="theory-tab-btn" data-theory="scan">SCAN (Elevator)</button>
+          <button class="theory-tab-btn" data-theory="cscan">C-SCAN</button>
+          <button class="theory-tab-btn" data-theory="look">LOOK</button>
+          <button class="theory-tab-btn" data-theory="clook">C-LOOK</button>
+        </div>
+
+        <div class="theory-content-box" id="theoryContentBox">
+          <!-- Injected dynamically -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Multi-Algorithm Race Modal -->
+  <div class="modal-backdrop" id="raceModal" style="display: none;">
+    <div class="modal-dialog glass-card race-dialog">
+      <div class="modal-header">
+        <div>
+          <h2><i class="fa-solid fa-flag-checkered"></i> Multi-Algorithm Head Race</h2>
+          <p class="subtitle">Watch 7 algorithms process the exact same queue in real-time side-by-side!</p>
+        </div>
+        <button class="close-modal-btn" id="closeRaceBtn"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="race-controls-row">
+        <button id="startRaceBtn" class="glass-btn btn-accent"><i class="fa-solid fa-play"></i> Start Grand Prix</button>
+        <button id="resetRaceBtn" class="glass-btn"><i class="fa-solid fa-rotate-left"></i> Reset</button>
+        <span class="race-status" id="raceStatusText">Ready for race!</span>
+      </div>
+
+      <div class="race-lanes-container" id="raceLanesContainer">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <div class="footer-content">
+      <span>Built with ❤️ for Operating Systems Engineers & Students</span>
+      <span class="separator">•</span>
+      <span>Smart Disk Scheduler v2.0 • Ultra-Smooth 60FPS Canvas Engine</span>
+      <span class="separator">•</span>
+      <a href="#top" class="scroll-top"><i class="fa-solid fa-arrow-up"></i> Back to Top</a>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="algorithms.js"></script>
+  <script src="audio.js"></script>
+  <script src="visualizer.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
